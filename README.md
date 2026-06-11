@@ -127,6 +127,10 @@ The demo lets you:
 - watch a **trained GRU policy** drive a point mass to reach targets (click to set a target);
 - drive an **Arm26** or **point mass** manually with per-muscle activation sliders.
 
+## Acknowledgements
+
+Developed with the help of [Claude](https://claude.com/claude-code).
+
 ## License
 
 MIT. The original MotorNet is by Olivier Codol et al.; please cite their
