@@ -9,7 +9,8 @@ The original MotorNet is a Python/PyTorch library. This is a faithful re-impleme
 simulation engine in plain ES modules, validated numerically against the PyTorch reference (see
 [Validation](#validation)).
 
-> **Live demo:** serve the repo (`npm run serve`) and open <http://localhost:8000/demo/>.
+> **Live demo:** <https://adam-matic.github.io/motornetjs/> (or serve the repo locally with
+> `npm run serve` and open <http://localhost:8000/demo/>).
 
 ## What's included
 

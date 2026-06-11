@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>motornet.js — biomechanical motor control in the browser</title>
+  <meta name="description" content="A dependency-free JavaScript port of MotorNet: simulate biomechanically realistic muscled arms and point masses, and run PyTorch-trained neural policies, entirely in the browser." />
+  <style>
+    :root {
+      --bg:#0e1116; --panel:#161b22; --ink:#e6edf3; --muted:#8b949e;
+      --accent:#58a6ff; --accent2:#1f6feb; --good:#3fb950; --border:#21262d;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg); color: var(--ink); line-height: 1.6;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+    /* hero */
+    .hero {
+      text-align: center; padding: 72px 24px 48px;
+      background:
+        radial-gradient(900px 380px at 50% -120px, rgba(31,111,235,.28), transparent 70%),
+        linear-gradient(180deg, #0b0e13, var(--bg));
+      border-bottom: 1px solid var(--border);
+    }
+    .hero h1 { margin: 0; font-size: clamp(34px, 6vw, 56px); letter-spacing:-.02em; }
+    .hero .tag { color: var(--accent); font-weight: 600; }
+    .hero p.lead {
+      max-width: 720px; margin: 18px auto 0; color: var(--muted); font-size: clamp(15px,2.2vw,18px);
+    }
+    .badges { margin-top: 14px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    .badge {
+      font-size:12px; color: var(--muted); border:1px solid var(--border);
+      background: var(--panel); border-radius: 999px; padding: 4px 12px;
+    }
+    .cta { margin-top: 30px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+    .btn {
+      display:inline-block; padding: 12px 22px; border-radius: 8px; font-weight:600; font-size:15px;
+      border:1px solid var(--border);
+    }
+    .btn.primary {
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+      color:#fff; border-color: transparent;
+    }
+    .btn.primary:hover { text-decoration:none; filter: brightness(1.07); }
+    .btn.ghost { background: var(--panel); color: var(--ink); }
+    .btn.ghost:hover { text-decoration:none; border-color: var(--accent); }
+
+    /* sections */
+    section { padding: 56px 0; border-bottom: 1px solid var(--border); }
+    section h2 {
+      font-size: 13px; text-transform: uppercase; letter-spacing:.08em;
+      color: var(--accent); margin: 0 0 6px;
+    }
+    section h2 + .h { font-size: 26px; margin: 0 0 24px; font-weight:700; }
+
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .card {
+      background: var(--panel); border:1px solid var(--border); border-radius: 12px; padding: 20px;
+    }
+    .card h3 { margin: 0 0 6px; font-size: 16px; }
+    .card p { margin: 0; color: var(--muted); font-size: 14px; }
+
+    /* demo embed */
+    .demo-frame-wrap {
+      border:1px solid var(--border); border-radius: 14px; overflow: hidden;
+      background: #0a0d12; box-shadow: 0 12px 40px rgba(0,0,0,.4);
+    }
+    .demo-frame-wrap .bar {
+      display:flex; align-items:center; gap:8px; padding: 10px 14px; border-bottom:1px solid var(--border);
+      background: var(--panel); font-size: 12px; color: var(--muted);
+    }
+    .demo-frame-wrap .dot { width:11px; height:11px; border-radius:50%; }
+    iframe.demo { width:100%; height: 660px; border:0; display:block; }
+    .demo-note { color: var(--muted); font-size: 13px; margin-top: 12px; text-align:center; }
+
+    /* code */
+    pre {
+      background:#0a0d12; border:1px solid var(--border); border-radius: 12px; padding: 18px 20px;
+      overflow:auto; font-size: 13.5px; line-height: 1.55;
+    }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    pre code { color: #c9d1d9; }
+    .tok-c { color:#8b949e; } .tok-k { color:#ff7b72; } .tok-s { color:#a5d6ff; } .tok-f { color:#d2a8ff; }
+
+    footer { padding: 40px 24px 64px; text-align:center; color: var(--muted); font-size: 13px; }
+    footer a { color: var(--muted); text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <h1>motornet<span class="tag">.js</span></h1>
+    <p class="lead">
+      A dependency-free JavaScript port of
+      <a href="https://github.com/OlivierCodol/MotorNet">MotorNet</a> —
+      simulate biomechanically realistic muscled arms and point masses, and run
+      PyTorch-trained neural control policies, <strong>entirely in your browser</strong>.
+    </p>
+    <div class="badges">
+      <span class="badge">Zero dependencies</span>
+      <span class="badge">Pure ES modules</span>
+      <span class="badge">Validated vs. PyTorch</span>
+      <span class="badge">MIT licensed</span>
+    </div>
+    <div class="cta">
+      <a class="btn primary" href="./demo/">Launch interactive demo →</a>
+      <a class="btn ghost" href="https://github.com/adam-matic/motornetjs">View on GitHub</a>
+    </div>
+  </header>
+
+  <main>
+    <section id="demo">
+      <div class="container">
+        <h2>Live demo</h2>
+        <div class="h">Watch a trained policy reach — right here</div>
+        <div class="demo-frame-wrap">
+          <div class="bar">
+            <span class="dot" style="background:#ff5f56"></span>
+            <span class="dot" style="background:#ffbd2e"></span>
+            <span class="dot" style="background:#27c93f"></span>
+            <span style="margin-left:8px">motornet.js · interactive demo</span>
+          </div>
+          <iframe class="demo" src="./demo/" title="motornet.js interactive demo" loading="lazy"></iframe>
+        </div>
+        <p class="demo-note">
+          Click inside the canvas to set a reach target. A GRU policy trained in PyTorch
+          drives the point-mass muscles to reach it — running here in plain JavaScript.
+          <a href="./demo/">Open the demo full-screen ↗</a>
+        </p>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="container">
+        <h2>What it does</h2>
+        <div class="h">A faithful re-implementation of MotorNet's simulation engine</div>
+        <div class="grid">
+          <div class="card">
+            <h3>Effectors &amp; muscles</h3>
+            <p>Point masses and two-joint arms driven by Hill-type, Thelen, MuJoCo, and ReLU muscle
+               models — the same biomechanics as the Python toolbox.</p>
+          </div>
+          <div class="card">
+            <h3>Gym-style environments</h3>
+            <p>A <code>RandomTargetReach</code> environment with the familiar
+               reset / step / obs / reward loop for closed-loop control.</p>
+          </div>
+          <div class="card">
+            <h3>Run trained policies</h3>
+            <p>Export a <code>PolicyGRU</code> from PyTorch and run inference in the browser —
+               no Python, no server, no WebAssembly.</p>
+          </div>
+          <div class="card">
+            <h3>Numerically validated</h3>
+            <p>Trajectories are checked against the PyTorch reference across seven
+               effector/muscle configurations plus the GRU policy.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="quickstart">
+      <div class="container">
+        <h2>Quick start</h2>
+        <div class="h">Simulate an arm in a handful of lines</div>
+<pre><code><span class="tok-k">import</span> { RigidTendonArm26, RigidTendonHillMuscle } <span class="tok-k">from</span> <span class="tok-s">'motornetjs'</span>;
+
+<span class="tok-k">const</span> effector = <span class="tok-k">new</span> <span class="tok-f">RigidTendonArm26</span>({ muscle: <span class="tok-k">new</span> <span class="tok-f">RigidTendonHillMuscle</span>() });
+effector.<span class="tok-f">reset</span>({ jointState: [<span class="tok-s">0.5</span>, <span class="tok-s">1.0</span>] });        <span class="tok-c">// shoulder, elbow (radians)</span>
+
+<span class="tok-k">const</span> action = [<span class="tok-s">0.3</span>, <span class="tok-s">0.0</span>, <span class="tok-s">0.6</span>, <span class="tok-s">0.0</span>, <span class="tok-s">0.2</span>, <span class="tok-s">0.1</span>];      <span class="tok-c">// 6 muscle excitations in [0,1]</span>
+<span class="tok-k">for</span> (<span class="tok-k">let</span> t = <span class="tok-s">0</span>; t &lt; <span class="tok-s">50</span>; t++) effector.<span class="tok-f">step</span>(action);
+
+console.<span class="tok-f">log</span>(effector.states.fingertip);  <span class="tok-c">// [x, y] endpoint position</span></code></pre>
+        <p class="demo-note" style="text-align:left">
+          See the <a href="https://github.com/adam-matic/motornetjs#readme">README</a>
+          for environments, trained-policy inference, and the full API.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    motornet.js is MIT licensed. Original
+    <a href="https://github.com/OlivierCodol/MotorNet">MotorNet</a> by Olivier Codol et al.; please
+    cite their <a href="https://doi.org/10.7554/eLife.88591">eLife paper</a> if you use this in research.
+  </footer>
+</body>
+</html>
