@@ -1,0 +1,16 @@
+{
+  "name": "motornetjs",
+  "version": "0.1.0",
+  "description": "A browser/JavaScript port of MotorNet — biomechanically realistic effectors for motor control, runnable in the browser.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node test/validate.mjs",
+    "serve": "node serve.mjs"
+  },
+  "keywords": ["motornet", "motor-control", "biomechanics", "muscle", "neuroscience", "simulation"],
+  "license": "MIT"
+}

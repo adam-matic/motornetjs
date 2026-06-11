@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>motornet.js — biomechanical motor control in the browser</title>
+  <style>
+    :root { --bg:#0e1116; --panel:#161b22; --ink:#e6edf3; --muted:#8b949e; --accent:#58a6ff; --good:#3fb950; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+           background: var(--bg); color: var(--ink); }
+    header { padding: 18px 24px; border-bottom: 1px solid #21262d; }
+    header h1 { margin:0; font-size: 20px; }
+    header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .wrap { display:flex; flex-wrap: wrap; gap: 20px; padding: 20px 24px; }
+    .panel { background: var(--panel); border:1px solid #21262d; border-radius: 10px; padding: 16px; }
+    canvas { background:#0a0d12; border-radius: 8px; display:block; touch-action:none; cursor: crosshair; }
+    .controls { width: 320px; }
+    .controls h2 { font-size: 14px; margin: 0 0 10px; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
+    label { display:block; font-size: 13px; margin: 10px 0 4px; color: var(--muted); }
+    select, button { width:100%; padding: 8px 10px; background:#0d1117; color: var(--ink);
+            border:1px solid #30363d; border-radius:6px; font-size: 13px; }
+    button { cursor: pointer; margin-top: 10px; }
+    button:hover { border-color: var(--accent); }
+    .row { display:flex; gap: 8px; align-items:center; margin: 6px 0; }
+    .row span.name { width: 110px; font-size: 12px; color: var(--muted); }
+    .bar { flex:1; height: 12px; background:#0d1117; border-radius: 6px; overflow:hidden; border:1px solid #30363d;}
+    .bar > div { height:100%; background: linear-gradient(90deg,#1f6feb,#58a6ff); width:0%; }
+    input[type=range] { flex:1; }
+    .muted { color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .stat { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--muted); }
+    code { background:#0d1117; padding:1px 5px; border-radius:4px; color:#79c0ff; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>motornet.js</h1>
+    <p>A JavaScript port of <a href="https://github.com/OlivierCodol/MotorNet" style="color:var(--accent)">MotorNet</a> —
+       biomechanically realistic effectors, running entirely in your browser.</p>
+  </header>
+
+  <div class="wrap">
+    <div class="panel">
+      <canvas id="view" width="560" height="560"></canvas>
+    </div>
+
+    <div class="panel controls">
+      <h2>Model</h2>
+      <label>Effector</label>
+      <select id="effector">
+        <option value="pointmass_policy">Point mass · trained reaching policy</option>
+        <option value="arm26_manual">Arm26 · manual muscle control</option>
+        <option value="pointmass_manual">Point mass · manual muscle control</option>
+      </select>
+
+      <div id="policyHelp" class="muted" style="margin-top:10px">
+        Click anywhere in the canvas to set a reach target. A GRU policy
+        (trained in PyTorch, run here in JS) drives the muscles to reach it.
+      </div>
+
+      <button id="resetBtn">Reset</button>
+      <button id="randomBtn">Random target</button>
+
+      <h2 style="margin-top:22px">Muscles</h2>
+      <div id="muscles"></div>
+
+      <div id="manualHint" class="muted" style="display:none; margin-top:8px">
+        Drag the sliders to activate muscles and watch the effector respond.
+      </div>
+
+      <h2 style="margin-top:22px">State</h2>
+      <div class="stat" id="state"></div>
+    </div>
+  </div>
+
+  <script type="module" src="./demo.js"></script>
+</body>
+</html>
