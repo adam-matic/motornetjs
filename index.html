@@ -33,6 +33,13 @@
     .hero p.lead {
       max-width: 720px; margin: 18px auto 0; color: var(--muted); font-size: clamp(15px,2.2vw,18px);
     }
+    .claude-credit {
+      margin: 22px auto 0; display:inline-flex; align-items:center; gap:9px;
+      padding: 9px 18px; border-radius: 999px; font-size: 14px; font-weight: 600;
+      color: #fff; border: 1px solid rgba(217,119,87,.5);
+      background: linear-gradient(180deg, rgba(217,119,87,.22), rgba(217,119,87,.10));
+    }
+    .claude-credit a { color: #f0a78b; }
     .badges { margin-top: 14px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
     .badge {
       font-size:12px; color: var(--muted); border:1px solid var(--border);
@@ -101,6 +108,9 @@
       simulate biomechanically realistic muscled arms and point masses, and run
       PyTorch-trained neural control policies, <strong>entirely in your browser</strong>.
     </p>
+    <div class="claude-credit">
+      🤖 Developed with the help of <a href="https://claude.com/claude-code">Claude</a>
+    </div>
     <div class="badges">
       <span class="badge">Zero dependencies</span>
       <span class="badge">Pure ES modules</span>

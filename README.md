@@ -1,5 +1,7 @@
 # motornet.js
 
+> 🤖 **Developed with the help of [Claude](https://claude.com/claude-code).**
+
 A JavaScript port of [**MotorNet**](https://github.com/OlivierCodol/MotorNet) — a toolbox for
 simulating biomechanically realistic effectors (point masses and muscled arms) and the neural
 networks that control them. This port runs the **forward simulation** and **trained-policy
