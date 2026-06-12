@@ -265,3 +265,74 @@ export class TwoDofArm extends Skeleton {
     return { xy, dxydt, dxyddof };
   }
 }
+
+// A single-DOF arm: the shoulder is locked at a fixed angle and only the elbow
+// rotates. The forearm inertia is constant (no configuration-dependent mass
+// matrix), Coriolis terms vanish because the shoulder velocity is always zero,
+// and the effective inertia reduces to I2 + m2*L2g^2.
+//
+// Elbow angle convention: same as TwoDofArm — measured relative to the upper
+// arm, so the absolute forearm angle is shoulderAngle + elbowAngle.
+export class LockedShoulderArm extends Skeleton {
+  constructor({
+    name = 'locked_shoulder_arm',
+    shoulderAngle = Math.PI / 4,
+    m2 = 1.43, l2 = 0.333, l2g = 0.165, i2 = 0.057, l1 = 0.309,
+    viscosity = 0,
+  } = {}) {
+    const deg = Math.PI / 180;
+    super(1, 2, {
+      name,
+      posLowerBound: [0 * deg],
+      posUpperBound: [155 * deg],
+      velLowerBound: [-1000],
+      velUpperBound: [1000],
+    });
+    this.shoulderAngle = shoulderAngle;
+    this.L1 = l1;
+    this.L2 = l2;
+    // effective elbow inertia (shoulder locked, so cross-inertia terms drop out)
+    this.inertia = m2 * l2g * l2g + i2;
+    this.c_viscosity = viscosity;
+    // elbow pivot position in world space (constant)
+    this._elbX = l1 * Math.cos(shoulderAngle);
+    this._elbY = l1 * Math.sin(shoulderAngle);
+  }
+
+  // inputs[0] = elbow generalized force (torque from muscles).
+  // Returns [elbow_angular_acceleration].
+  ode(inputs, jointState, endpointLoad) {
+    const elbVel = jointState[1];
+    const totalAngle = this.shoulderAngle + jointState[0];
+    const s = Math.sin(totalAngle);
+    const c = Math.cos(totalAngle);
+    // Jacobian column for the elbow DOF: d(hand_xy)/d(elbow_angle)
+    const jx = -this.L2 * s;
+    const jy = this.L2 * c;
+    const tau = inputs[0] + jx * endpointLoad[0] + jy * endpointLoad[1];
+    return [(tau - this.c_viscosity * elbVel) / this.inertia];
+  }
+
+  integrate(dt, stateDerivative, jointState) {
+    let newVel = [jointState[1] + stateDerivative[0] * dt];
+    let newPos = [jointState[0] + jointState[1] * dt];
+    newVel = this.clipVelocity(newPos, newVel);
+    newPos = this.clipPosition(newPos);
+    return [...newPos, ...newVel];
+  }
+
+  // Returns [x, y, vx, vy] of the fingertip (hand).
+  joint2cartesian(jointState) {
+    const totalAngle = this.shoulderAngle + jointState[0];
+    const elbVel = jointState[1];
+    const x = this._elbX + this.L2 * Math.cos(totalAngle);
+    const y = this._elbY + this.L2 * Math.sin(totalAngle);
+    const vx = -this.L2 * Math.sin(totalAngle) * elbVel;
+    const vy = this.L2 * Math.cos(totalAngle) * elbVel;
+    return [x, y, vx, vy];
+  }
+
+  path2cartesian() {
+    throw new Error('LockedShoulderArm: path muscles are not supported; use analytical _getGeometry in the effector.');
+  }
+}

@@ -7,7 +7,7 @@
 // resulting weights here with PolicyGRU.loadWeights to run trained controllers
 // in the browser.
 
-export { Skeleton, PointMass, TwoDofArm } from './skeleton.js';
+export { Skeleton, PointMass, TwoDofArm, LockedShoulderArm } from './skeleton.js';
 export {
   Muscle, ReluMuscle, MujocoHillMuscle, RigidTendonHillMuscle,
   RigidTendonHillMuscleThelen, CompliantTendonHillMuscle,
@@ -15,6 +15,7 @@ export {
 export {
   Effector, ReluPointMass24, FreePointMass24, Reacher,
   RigidTendonArm26, CompliantTendonArm26,
+  RigidTendonElbow13, CompliantTendonElbow13,
 } from './effector.js';
 export { Environment, RandomTargetReach } from './environment.js';
 export { PolicyGRU } from './policy.js';

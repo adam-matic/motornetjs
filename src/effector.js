@@ -5,7 +5,7 @@
 // integrates the coupled muscle + skeleton dynamics forward in time. Batch size
 // is fixed to 1 (single simulation) in this port.
 
-import { PointMass, TwoDofArm } from './skeleton.js';
+import { PointMass, TwoDofArm, LockedShoulderArm } from './skeleton.js';
 import { ReluMuscle, CompliantTendonHillMuscle } from './muscle.js';
 import { RNG } from './random.js';
 
@@ -421,5 +421,88 @@ export class CompliantTendonArm26 extends RigidTendonArm26 {
     params.optimal_muscle_length = [0.134, 0.140, 0.092, 0.093, 0.137, 0.127];
     this.muscle.build(timestep, params);
     this.a0 = [0.182, 0.2362, 0.2859, 0.2355, 0.3329, 0.2989];
+  }
+}
+
+// 1-DOF elbow arm with 3 muscles (brachioradialis, tricepslat, biceps).
+// The shoulder is locked at a fixed angle via LockedShoulderArm. MTU geometry
+// uses the same polynomial moment-arm coefficients as RigidTendonArm26 with the
+// constant shoulder contribution folded into a0 at construction time.
+export class RigidTendonElbow13 extends Effector {
+  constructor({
+    muscle, shoulderAngle = Math.PI / 4, skeleton = null,
+    timestep = 0.01, muscleKwargs = {}, ...rest
+  } = {}) {
+    const deg = Math.PI / 180;
+    const posLowerBound = rest.posLowerBound ?? [0];
+    const posUpperBound = rest.posUpperBound ?? [155 * deg];
+    delete rest.posLowerBound; delete rest.posUpperBound;
+    const sk = skeleton ?? new LockedShoulderArm({ shoulderAngle });
+    super({ skeleton: sk, muscle, timestep, posLowerBound, posUpperBound, ...rest });
+
+    this.muscleStateDim = this.muscle.stateDim;
+    this.geometryStateDim = 3; // mtuLen, mtuVel, moment_elbow
+    this.nMuscles = 3;
+    this.inputDim = 3;
+    this.muscleName = ['brachioradialis', 'tricepslat', 'biceps'];
+
+    const params = { ...muscleKwargs };
+    for (const key of this.muscle.toBuildKeys) {
+      if (!(key in params) && key in this.muscle.toBuildDefaults) params[key] = this.muscle.toBuildDefaults[key];
+    }
+    // muscles 2, 3, 4 from RigidTendonArm26 (brachioradialis, tricepslat, biceps)
+    params.max_isometric_force = [1422, 1549, 414];
+    params.tendon_length = [0.172, 0.187, 0.204];
+    params.optimal_muscle_length = [0.092, 0.093, 0.137];
+    this.muscle.build(this.minidt, params);
+
+    // Moment-arm polynomial coefficients from Arm26 (Nijhof & Kouwenhoven 2000).
+    // Shoulder reference offset: a3[0] = PI/2. Elbow reference offset: a3[1] = 0.
+    // The shoulder position is fixed, so fold its contribution into a constant a0.
+    const shoPos = shoulderAngle - Math.PI / 2;
+    const a0_arm26 = [0.2859, 0.2355, 0.3329]; // a0 for muscles 2, 3, 4
+    const a1_sho = [0, 0, -0.03]; // a1[0] for muscles 2, 3, 4 (shoulder terms)
+    const a2_sho = [0, 0, 0]; // a2[0] for muscles 2, 3, 4
+    this._a0 = a0_arm26.map((a0, i) => a0 + (a1_sho[i] + shoPos * a2_sho[i]) * shoPos);
+    this._a1 = [-0.014, 0.025, -0.016]; // a1[1] (elbow moment arm linear term)
+    this._a2 = [-4e-3, -2.2e-3, -5.7e-3]; // a2[1] (elbow moment arm quadratic term)
+  }
+
+  _getGeometry(jointState) {
+    const elbPos = jointState[0];
+    const elbVel = jointState[1];
+    const mtuLen = new Array(3);
+    const mtuVel = new Array(3);
+    const moment = [new Array(3)];
+    for (let m = 0; m < 3; m++) {
+      const ma = this._a1[m] + elbPos * this._a2[m] * 2;
+      moment[0][m] = ma;
+      mtuLen[m] = this._a0[m] + (this._a1[m] + elbPos * this._a2[m]) * elbPos;
+      mtuVel[m] = elbVel * ma;
+    }
+    return [mtuLen, mtuVel, ...moment];
+  }
+}
+
+// Compliant-tendon variant of RigidTendonElbow13. Uses RK4 and a smaller
+// default timestep for numerical stability, matching the CompliantTendonArm26
+// convention.
+export class CompliantTendonElbow13 extends RigidTendonElbow13 {
+  constructor({ shoulderAngle = Math.PI / 4, skeleton = null, timestep = 0.0002, muscleKwargs = {}, ...rest } = {}) {
+    const integrationMethod = rest.integrationMethod ?? 'rk4';
+    delete rest.integrationMethod;
+    super({
+      muscle: new CompliantTendonHillMuscle(),
+      shoulderAngle, skeleton, timestep, integrationMethod, muscleKwargs, ...rest,
+    });
+    // rebuild with the compliant timestep (super already built, this overwrites)
+    const params = { ...muscleKwargs };
+    for (const key of this.muscle.toBuildKeys) {
+      if (!(key in params) && key in this.muscle.toBuildDefaults) params[key] = this.muscle.toBuildDefaults[key];
+    }
+    params.max_isometric_force = [1422, 1549, 414];
+    params.tendon_length = [0.172, 0.187, 0.204];
+    params.optimal_muscle_length = [0.092, 0.093, 0.137];
+    this.muscle.build(timestep, params);
   }
 }
